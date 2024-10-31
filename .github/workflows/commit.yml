@@ -2,30 +2,45 @@ name: Daily Commit
 
 on:
   schedule:
-    - cron: "0 0 * * *" # This will run the action every day at midnight UTC.
+    - cron: '0 0 * * *'  # Runs every day at midnight UTC.
 
 jobs:
   commit:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+    - name: Checkout Repository
+      uses: actions/checkout@v3
 
-      - name: Make Changes
-        run: |
-          # Make changes to a specific file, or add a timestamp
-          echo "$(date)" >> commit-log.txt  # This will add a timestamp to `commit-log.txt` daily.
+    - name: Initialize Day Counter
+      run: |
+        # Check if day-count.txt exists; if not, initialize it with 1
+        if [ ! -f day-count.txt ]; then
+          echo "1" > day-count.txt
+        fi
 
-      - name: Commit Changes
-        run: |
-          git config --global user.email "rmanbajra@gmail.com"
-          git config --global user.name "saralbjr"
-          git add .
-          git commit -m "Automated daily commit"
+    - name: Increment and Log Day
+      run: |
+        # Read the current day count
+        DAY_COUNT=$(cat day-count.txt)
+        
+        # Log the current day as "Day X" in commit-log.txt
+        echo "Day $DAY_COUNT" >> commit-log.txt
+        
+        # Increment the day count by 1
+        NEW_DAY_COUNT=$((DAY_COUNT + 1))
+        
+        # Update day-count.txt with the new day count
+        echo "$NEW_DAY_COUNT" > day-count.txt
 
-      - name: Push Changes
-        env:
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git push
+    - name: Commit Changes
+      run: |
+        git config --global user.email "your-email@example.com"
+        git config --global user.name "your-username"
+        git add .
+        git commit -m "Automated daily commit: Day $DAY_COUNT" --allow-empty
+
+    - name: Push Changes
+      run: |
+        git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/saralbjr/commit.git
+        git push
